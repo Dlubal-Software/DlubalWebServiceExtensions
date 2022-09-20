@@ -1,0 +1,8 @@
+.vs/
+RFEMWebServiceVSExtension/bin/
+RFEMWebServiceVSExtension/obj/
+RSTABWebServiceVSExtension/bin/
+RSTABWebServiceVSExtension/obj/
+RSECTONebServiceVSExtension/bin/
+RSECTIONWebServiceVSExtension/obj/
+*.pdb
