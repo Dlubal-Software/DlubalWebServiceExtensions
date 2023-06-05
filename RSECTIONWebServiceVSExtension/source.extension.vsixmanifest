@@ -1,13 +1,23 @@
 ﻿<?xml version="1.0" ?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="RSECTIONWebServiceVSExtension.7962331c-e9f4-405a-8b73-fe7608de269e" Version="1.0" Language="en-US" Publisher="Jaroslav Brož" />
-        <DisplayName>RSECTIONWebServiceVSExtension</DisplayName>
-        <Description xml:space="preserve">Empty VSIX Project.</Description>
+        <Identity Id="RSECTIONWebServiceVSExtension.7962331c-e9f4-405a-8b73-fe7608de269e" Version="1.0" Language="en-US" Publisher="Dlubal Software" />
+        <DisplayName>RSECTION WebService Extension</DisplayName>
+        <Description xml:space="preserve">Template project for RSECTION WebService Library. Contains simple Console example. It references official Dlubal's NuGet packages</Description>
+        <MoreInfo>https://dlubal-software.github.io/.github/</MoreInfo>
+        <License>LICENSE.txt</License>
         <Icon>rsection.ico</Icon>
+        <PreviewImage>rsection.png</PreviewImage>
+        <Tags>RSECTION Dlubal WebService StructuralAnalysis</Tags>
     </Metadata>
     <Installation>
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.Pro">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.Enterprise">
             <ProductArchitecture>amd64</ProductArchitecture>
         </InstallationTarget>
     </Installation>
@@ -19,5 +29,6 @@
     </Prerequisites>
     <Assets>
         <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+        <Asset Type="Microsoft.VisualStudio.ProjectTemplate" d:Source="File" Path="ProjectTemplates" TargetVersion="[17.0,18.0)" d:TargetPath="ProjectTemplates\RSECTIONProjectTemplate.zip" />
     </Assets>
 </PackageManifest>

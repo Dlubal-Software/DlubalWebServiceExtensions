@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RSECTIONProjectTemplate": {
+      "commandName": "Project",
+      "commandLineArgs": "CreateNewModel"
+    }
+  }
+}

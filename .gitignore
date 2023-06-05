@@ -5,4 +5,10 @@ RSTABWebServiceVSExtension/bin/
 RSTABWebServiceVSExtension/obj/
 RSECTONebServiceVSExtension/bin/
 RSECTIONWebServiceVSExtension/obj/
+RSECTIONProjectTemplate/bin/
+RSECTIONProjectTemplate/obj/
+RFEMProjectTemplate/bin/
+RFEMProjectTemplate/obj/
+RSTABProjectTemplate/bin/
+RSTABProjectTemplate/obj/
 *.pdb

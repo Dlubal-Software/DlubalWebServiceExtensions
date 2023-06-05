@@ -1,0 +1,5 @@
+ <LanguageTag>C#</LanguageTag>
+    <PlatformTag>Windows</PlatformTag>
+    <ProjectTypeTag>Desktop</ProjectTypeTag>
+    <ProjectTypeTag>Console</ProjectTypeTag>
+    <ProjectTypeTag>Dlubal</ProjectTypeTag>
