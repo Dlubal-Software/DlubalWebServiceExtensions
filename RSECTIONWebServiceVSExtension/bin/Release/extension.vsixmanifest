@@ -1,6 +1,6 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
   <Metadata>
-    <Identity Id="RSECTIONWebServiceVSExtension.7962331c-e9f4-405a-8b73-fe7608de269e" Version="1.0" Language="en-US" Publisher="Dlubal Software" />
+    <Identity Id="RSECTIONWebServiceVSExtension.7962331c-e9f4-405a-8b73-fe7608de269e" Version="1.1" Language="en-US" Publisher="Dlubal Software GmbH" />
     <DisplayName>RSECTION WebService Extension</DisplayName>
     <Description xml:space="preserve">Template project for RSECTION WebService Library. Contains simple Console example. It references official Dlubal's NuGet packages</Description>
     <MoreInfo>https://dlubal-software.github.io/.github/</MoreInfo>

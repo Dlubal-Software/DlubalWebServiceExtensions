@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" ?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="RSTABWebServiceVSExtension.03dcd804-591f-41ab-a2f8-0b26b6cd886d" Version="1.0" Language="en-US" Publisher="Dlubal Software" />
+        <Identity Id="RSTABWebServiceVSExtension.03dcd804-591f-41ab-a2f8-0b26b6cd886d" Version="1.1" Language="en-US" Publisher="Dlubal Software GmbH" />
         <DisplayName>RSTAB WebService Extension</DisplayName>
         <Description xml:space="preserve">Template project for RSTAB WebService Library.  Contains simple Console example. It references official Dlubal's NuGet packages</Description>
         <MoreInfo>https://dlubal-software.github.io/.github/</MoreInfo>

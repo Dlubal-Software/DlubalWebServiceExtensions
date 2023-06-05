@@ -4,10 +4,18 @@ using Dlubal.WS.Rfem6.Application;
 using ApplicationClient = Dlubal.WS.Rfem6.Application.RfemApplicationClient;
 using Dlubal.WS.Rfem6.Model;
 using ModelClient = Dlubal.WS.Rfem6.Model.RfemModelClient;
+using System.Net.Http;
 using System.ServiceModel;
+using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Cantilever
+namespace RFEMProjectTemplate
 {
+
+
+
+
     class Program
     {
         public static EndpointAddress Address { get; set; } = new EndpointAddress("http://localhost:8081");
@@ -85,6 +93,224 @@ namespace Cantilever
                     name = "C20/25 | EN 1992-1-1:2004/A1:2014"
                 };
 
+                material materialUser = new material
+                {
+                    no = 6,
+                    name = "UserMaterial",
+                    user_defined_name_enabled = true,
+                    user_defined_name_enabledSpecified = true,
+                    user_defined = true,
+                    user_definedSpecified = true,
+                    material_type = material_material_type.TYPE_BASIC,
+                    material_typeSpecified = true,
+                    material_model = material_material_model.MODEL_ISOTROPIC_LINEAR_ELASTIC,
+                    material_modelSpecified = true,
+                    definition_type = material_definition_type.DERIVED_G,
+                    definition_typeSpecified = true,
+                    is_temperature_dependent = false,
+                    is_temperature_dependentSpecified = true,
+                    temperature = new material_temperature_row[]{
+                             new material_temperature_row(){
+                                 no = 1,
+                                 row = new material_temperature(){
+                                 elasticity_modulus_global = 2.7e+10,
+                                 elasticity_modulus_globalSpecified = true,
+                                 elasticity_modulus_x = 2.7e+10,
+                                 elasticity_modulus_xSpecified = true,
+                                 elasticity_modulus_y = 2.7e+10,
+                                 elasticity_modulus_ySpecified = true,
+                                 elasticity_modulus_z = 2.7e+10,
+                                 elasticity_modulus_zSpecified = true,
+                                 shear_modulus_global = 1.125e+10,
+                                 shear_modulus_globalSpecified = true,
+                                 shear_modulus_yz = 1.125e+10,
+                                 shear_modulus_yzSpecified = true,
+                                 shear_modulus_xz = 1.125e+10,
+                                 shear_modulus_xzSpecified = true,
+                                 shear_modulus_xy = 1.125e+10,
+                                 shear_modulus_xySpecified =  true,
+                                 poisson_ratio_global = 0.2,
+                                 poisson_ratio_globalSpecified = true,
+                                 poisson_ratio_yz = 0.2,
+                                 poisson_ratio_yzSpecified = true,
+                                 poisson_ratio_xz = 0.2,
+                                 poisson_ratio_xzSpecified = true,
+                                 poisson_ratio_xy = 0.2,
+                                 poisson_ratio_xySpecified = true,
+                                 poisson_ratio_zy = 0.2,
+                                 poisson_ratio_zySpecified = true,
+                                 poisson_ratio_zx = 0.2,
+                                 poisson_ratio_zxSpecified = true,
+                                 poisson_ratio_yx = 0.2,
+                                 poisson_ratio_yxSpecified = true,
+                                 mass_density = 2500,
+                                 mass_densitySpecified = true,
+                                 specific_weight = 25000,
+                                 specific_weightSpecified = true,
+                                 thermal_expansion_coefficient_global = 1e-05,
+                                 thermal_expansion_coefficient_globalSpecified = true,
+                                 thermal_expansion_coefficient_x = 1e-05,
+                                 thermal_expansion_coefficient_xSpecified = true,
+                                 thermal_expansion_coefficient_y = 1e-05,
+                                 thermal_expansion_coefficient_ySpecified = true,
+                                 thermal_expansion_coefficient_z = 1e-05,
+                                 thermal_expansion_coefficient_zSpecified = true,
+                                 division_multiplication_factor = 1,
+                                 division_multiplication_factorSpecified = true,
+                                 strain_hardening_modulus = 270000,
+                                 strain_hardening_modulusSpecified = true,
+                                 }
+
+                             }
+                         },
+                    stiffness_matrix_editable = false,
+                    stiffness_matrix_editableSpecified = true,
+                    stiffness_modification = false,
+                    stiffness_modificationSpecified = true,
+                    stiffness_modification_type = material_stiffness_modification_type.STIFFNESS_MODIFICATION_TYPE_DIVISION,
+                    stiffness_modification_typeSpecified = true,
+                };
+
+
+                material materialUserThermal = new material
+                {
+                    no = 7,
+                    name = "UserMaterialThermal",
+                    user_defined_name_enabled = true,
+                    user_defined_name_enabledSpecified = true,
+                    user_defined = true,
+                    user_definedSpecified = true,
+                    material_type = material_material_type.TYPE_BASIC,
+                    material_typeSpecified = true,
+                    material_model = material_material_model.MODEL_ISOTROPIC_LINEAR_ELASTIC,
+                    material_modelSpecified = true,
+                    definition_type = material_definition_type.DERIVED_G,
+                    definition_typeSpecified = true,
+                    is_temperature_dependent = true,
+                    is_temperature_dependentSpecified = true,
+                    reference_temperature = 293.15,
+                    reference_temperatureSpecified = true,
+                    temperature_properties_sorted = true,
+                    temperature_properties_sortedSpecified = true,
+                    temperature = new material_temperature_row[]{
+                             new material_temperature_row(){
+                                 no = 1,
+                                 row = new material_temperature(){
+                                 temperature = 293.15,
+                                 temperatureSpecified = true,
+                                 elasticity_modulus_global = 2.7e+10,
+                                 elasticity_modulus_globalSpecified = true,
+                                 elasticity_modulus_x = 2.7e+10,
+                                 elasticity_modulus_xSpecified = true,
+                                 elasticity_modulus_y = 2.7e+10,
+                                 elasticity_modulus_ySpecified = true,
+                                 elasticity_modulus_z = 2.7e+10,
+                                 elasticity_modulus_zSpecified = true,
+                                 shear_modulus_global = 1.125e+10,
+                                 shear_modulus_globalSpecified = true,
+                                 shear_modulus_yz = 1.125e+10,
+                                 shear_modulus_yzSpecified = true,
+                                 shear_modulus_xz = 1.125e+10,
+                                 shear_modulus_xzSpecified = true,
+                                 shear_modulus_xy = 1.125e+10,
+                                 shear_modulus_xySpecified =  true,
+                                 poisson_ratio_global = 0.2,
+                                 poisson_ratio_globalSpecified = true,
+                                 poisson_ratio_yz = 0.2,
+                                 poisson_ratio_yzSpecified = true,
+                                 poisson_ratio_xz = 0.2,
+                                 poisson_ratio_xzSpecified = true,
+                                 poisson_ratio_xy = 0.2,
+                                 poisson_ratio_xySpecified = true,
+                                 poisson_ratio_zy = 0.2,
+                                 poisson_ratio_zySpecified = true,
+                                 poisson_ratio_zx = 0.2,
+                                 poisson_ratio_zxSpecified = true,
+                                 poisson_ratio_yx = 0.2,
+                                 poisson_ratio_yxSpecified = true,
+                                 mass_density = 2500,
+                                 mass_densitySpecified = true,
+                                 specific_weight = 25000,
+                                 specific_weightSpecified = true,
+                                 thermal_expansion_coefficient_global = 1e-05,
+                                 thermal_expansion_coefficient_globalSpecified = true,
+                                 thermal_expansion_coefficient_x = 1e-05,
+                                 thermal_expansion_coefficient_xSpecified = true,
+                                 thermal_expansion_coefficient_y = 1e-05,
+                                 thermal_expansion_coefficient_ySpecified = true,
+                                 thermal_expansion_coefficient_z = 1e-05,
+                                 thermal_expansion_coefficient_zSpecified = true,
+                                 division_multiplication_factor = 1,
+                                 division_multiplication_factorSpecified = true,
+                                 strain_hardening_modulus = 270000,
+                                 strain_hardening_modulusSpecified = true,
+                                 }
+
+                             },
+                              new material_temperature_row(){
+                                 no = 2,
+                                 row = new material_temperature(){
+                                 temperature = 303.15,
+                                 temperatureSpecified = true,
+                                 elasticity_modulus_global =2.8e+10,
+                                 elasticity_modulus_globalSpecified = true,
+                                 elasticity_modulus_x = 2.8e+10,
+                                 elasticity_modulus_xSpecified = true,
+                                 elasticity_modulus_y = 2.8e+10,
+                                 elasticity_modulus_ySpecified = true,
+                                 elasticity_modulus_z =2.8e+10,
+                                 elasticity_modulus_zSpecified = true,
+                                 shear_modulus_global =11666666666.666668,
+                                 shear_modulus_globalSpecified = true,
+                                 shear_modulus_yz =11666666666.666668,
+                                 shear_modulus_yzSpecified = true,
+                                 shear_modulus_xz = 11666666666.666668,
+                                 shear_modulus_xzSpecified = true,
+                                 shear_modulus_xy = 11666666666.666668,
+                                 shear_modulus_xySpecified =  true,
+                                 poisson_ratio_global = 0.2,
+                                 poisson_ratio_globalSpecified = true,
+                                 poisson_ratio_yz = 0.2,
+                                 poisson_ratio_yzSpecified = true,
+                                 poisson_ratio_xz = 0.2,
+                                 poisson_ratio_xzSpecified = true,
+                                 poisson_ratio_xy = 0.2,
+                                 poisson_ratio_xySpecified = true,
+                                 poisson_ratio_zy = 0.2,
+                                 poisson_ratio_zySpecified = true,
+                                 poisson_ratio_zx = 0.2,
+                                 poisson_ratio_zxSpecified = true,
+                                 poisson_ratio_yx = 0.2,
+                                 poisson_ratio_yxSpecified = true,
+                                 mass_density = 2500,
+                                 mass_densitySpecified = true,
+                                 specific_weight = 25000,
+                                 specific_weightSpecified = true,
+                                 thermal_expansion_coefficient_global = 1e-05,
+                                 thermal_expansion_coefficient_globalSpecified = true,
+                                 thermal_expansion_coefficient_x = 1e-05,
+                                 thermal_expansion_coefficient_xSpecified = true,
+                                 thermal_expansion_coefficient_y = 1e-05,
+                                 thermal_expansion_coefficient_ySpecified = true,
+                                 thermal_expansion_coefficient_z = 1e-05,
+                                 thermal_expansion_coefficient_zSpecified = true,
+                                 division_multiplication_factor = 1,
+                                 division_multiplication_factorSpecified = true,
+                                 strain_hardening_modulus = 270000,
+                                 strain_hardening_modulusSpecified = true,
+                                 }
+
+                             }
+                         },
+                    stiffness_matrix_editable = false,
+                    stiffness_matrix_editableSpecified = true,
+                    stiffness_modification = false,
+                    stiffness_modificationSpecified = true,
+                    stiffness_modification_type = material_stiffness_modification_type.STIFFNESS_MODIFICATION_TYPE_DIVISION,
+                    stiffness_modification_typeSpecified = true,
+                };
+
+
                 section sectionRectangle = new section
                 {
                     no = 1,
@@ -94,7 +320,11 @@ namespace Cantilever
                     typeSpecified = true,
                     parametrization_type = section_parametrization_type.PARAMETRIC_MASSIVE_I__MASSIVE_RECTANGLE__R_M1,
                     parametrization_typeSpecified = true,
-                    name = "R_M1 0.5/1.0", // width/height as in RFEM
+                    //name = "R_M1 0.5/1.0", // width/height as in RFEM
+                    b = 0.5,
+                    bSpecified = true,
+                    h = 1.0,
+                    hSpecified = true,
                 };
 
                 node n1 = new()
@@ -114,7 +344,6 @@ namespace Cantilever
                     coordinate_system_typeSpecified = true,
                     comment = "concrete part"
                 };
-
 
                 line line = new()
                 {
@@ -149,6 +378,8 @@ namespace Cantilever
                 {
                     model.begin_modification("Geometry");
                     model.set_material(materialConcrete);
+                    model.set_material(materialUser);
+                    model.set_material(materialUserThermal);
                     model.set_section(sectionRectangle);
                     model.set_node(n1);
                     model.set_node(n2);
@@ -159,7 +390,6 @@ namespace Cantilever
                 catch (Exception exception)
                 {
                     model.cancel_modification();
-                    Console.WriteLine("Something happen when creation of geometry" + exception.Message);
                     throw;
                 }
                 finally
@@ -170,9 +400,7 @@ namespace Cantilever
                     }
                     catch (Exception exception)
                     {
-                        Console.WriteLine("Something happen when finishing creation of geometry" + exception.Message);
                         model.reset();
-                        throw;
                     }
                 }
 
@@ -289,7 +517,6 @@ namespace Cantilever
                 catch (Exception exception)
                 {
                     model.cancel_modification();
-                    Console.WriteLine("Something happen when creation of load" + exception.Message);
                     throw;
                 }
                 finally
@@ -300,7 +527,6 @@ namespace Cantilever
                     }
                     catch (Exception exception)
                     {
-                        Console.WriteLine("Something wrong in finish modification of load\n" + exception.Message + "\n");
                         model.reset();
                     }
                 }
@@ -329,7 +555,6 @@ namespace Cantilever
                 catch (Exception exception)
                 {
                     model.cancel_modification();
-                    Console.WriteLine("Something happen when creation of load" + exception.Message);
                     throw;
                 }
                 finally
@@ -340,11 +565,11 @@ namespace Cantilever
                     }
                     catch (Exception exception)
                     {
-                        Console.WriteLine("Something wrong in finish modification of load\n" + exception.Message + "\n");
                         model.reset();
                     }
                 }
 
+#if RFEM
                 #region generate mesh and get mesh statistics
                 calculation_message[] meshGenerationMessage = model.generate_mesh(true);
                 if (meshGenerationMessage.Length != 0)
@@ -357,6 +582,7 @@ namespace Cantilever
                 Console.WriteLine("Number of volume elements: " + mesh_Statistics.solid_3D_finite_elements);
 
                 #endregion
+#endif
 
                 calculation_message[] calculationMesages = model.calculate_all(true);
                 if (calculationMesages.Length != 0)
@@ -462,13 +688,13 @@ namespace Cantilever
 
                 }
                 #endregion
+
                 application.close_model(0, false);//close model
                                                   //  application.close_application();
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine(ex);
-                Console.WriteLine("Stopped program because of exception :" + ex.Message);
             }
         }
     }
