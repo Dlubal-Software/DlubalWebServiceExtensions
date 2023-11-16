@@ -9,6 +9,7 @@ using System.ServiceModel;
 using System.Xml.Linq;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace RFEMProjectTemplate
 {
@@ -30,11 +31,24 @@ namespace RFEMProjectTemplate
                     // Send timeout is set to 180 seconds.
                     SendTimeout = new TimeSpan(0, 0, 180),
                     UseDefaultWebProxy = true,
+                    MaxReceivedMessageSize = 1000000000,
                 };
 
                 return binding;
             }
         }
+
+
+        static string DecodeHtmlString(string myEncodedString)
+        {
+            StringWriter myWriter = new StringWriter();
+            // Decode the encoded string.
+            System.Net.WebUtility.HtmlDecode(myEncodedString, myWriter);
+            string myDecodedString = myWriter.ToString();
+
+            return myDecodedString;
+        }
+
 
         //private static RfemApplicationClient application = null;
         private static ApplicationClient application = null;
@@ -86,6 +100,55 @@ namespace RFEMProjectTemplate
                 ModelClient model = new ModelClient(Binding, new EndpointAddress(modelUrl));
                 model.reset();
                 #endregion
+
+
+                #region AddonList
+                addon_list_type addon = model.get_addon_statuses();
+                Console.WriteLine("Material nonlinear analysis active?: {0}", addon.analysis.material_nonlinear_analysis_active ? "Yes" : "No");
+                Console.WriteLine("Structure stability active?: {0}", addon.analysis.structure_stability_active ? "Yes" : "No");
+                Console.WriteLine("Construction stages active?: {0}", addon.analysis.construction_stages_active ? "Yes" : "No");
+                Console.WriteLine("Time dependent active?: {0}", addon.analysis.time_dependent_active ? "Yes" : "No");
+                Console.WriteLine("Form finding active?: {0}", addon.analysis.form_finding_active ? "Yes" : "No");
+                Console.WriteLine("Warping active?: {0}", addon.analysis.torsional_warping_active ? "Yes" : "No");
+                Console.WriteLine("Modal analysis active?: {0}", addon.dynamic_analysis_settings.modal_active ? "Yes" : "No");
+                Console.WriteLine("Spectral analysis active?: {0}", addon.dynamic_analysis_settings.spectral_active ? "Yes" : "No");
+                Console.WriteLine("Building model active?: {0}", addon.special_solutions.building_model_active ? "Yes" : "No");
+                Console.WriteLine("Wind simulation active?: {0}", addon.special_solutions.wind_simulation_active ? "Yes" : "No");
+                Console.WriteLine("Geo-technical analysis active?: {0}", addon.special_solutions.geotechnical_analysis_active ? "Yes" : "No");
+                Console.WriteLine("Stress analysis active?: {0}", addon.design_addons.stress_analysis_active ? "Yes" : "No");
+                Console.WriteLine("Concrete design active?: {0}", addon.design_addons.concrete_design_active ? "Yes" : "No");
+                Console.WriteLine("Steel design active?: {0}", addon.design_addons.steel_design_active ? "Yes" : "No");
+                Console.WriteLine("Timber design active?: {0}", addon.design_addons.timber_design_active ? "Yes" : "No");
+                Console.WriteLine("Masonry design active?: {0}", addon.masonry_design_active ? "Yes" : "No");
+                Console.WriteLine("Aluminum design active?: {0}", addon.design_addons.aluminum_design_active ? "Yes" : "No");
+                Console.WriteLine("Steel joints design active?: {0}", addon.design_addons.steel_joints_active ? "Yes" : "No");
+                Console.WriteLine("Cost estimation active?: {0}", addon.analysis.cost_estimation_active ? "Yes" : "No");
+
+                addon.design_addons.concrete_design_active = true;
+                addon.design_addons.concrete_design_activeSpecified = true;
+                try
+                {
+                    model.begin_modification("Set AddOns");
+                    model.set_addon_statuses(addon);
+                }
+                catch (Exception exception)
+                {
+                    model.cancel_modification();
+                    throw;
+                }
+                finally
+                {
+                    try
+                    {
+                        model.finish_modification();
+                    }
+                    catch (Exception exception)
+                    {
+                        throw;
+                    }
+                }
+                #endregion
+
 
                 material materialConcrete = new material
                 {
@@ -310,6 +373,13 @@ namespace RFEMProjectTemplate
                     stiffness_modification_typeSpecified = true,
                 };
 
+                material materialReinforcementBars = new material
+                {
+                    no = 2,
+                    name = "B550S(A)",
+                    material_type = material_material_type.TYPE_REINFORCING_STEEL,
+                };
+
 
                 section sectionRectangle = new section
                 {
@@ -320,12 +390,381 @@ namespace RFEMProjectTemplate
                     typeSpecified = true,
                     parametrization_type = section_parametrization_type.PARAMETRIC_MASSIVE_I__MASSIVE_RECTANGLE__R_M1,
                     parametrization_typeSpecified = true,
-                    //name = "R_M1 0.5/1.0", // width/height as in RFEM
                     b = 0.5,
                     bSpecified = true,
                     h = 1.0,
                     hSpecified = true,
                 };
+
+                try
+                {
+                    model.begin_modification("Material");
+                    model.set_material(materialConcrete);
+                    model.set_material(materialReinforcementBars);
+                    model.set_material(materialUser);
+                    model.set_material(materialUserThermal);
+                    model.set_section(sectionRectangle);
+
+                }
+                catch (Exception exception)
+                {
+                    model.cancel_modification();
+                    throw;
+                }
+                finally
+                {
+                    try
+                    {
+                        model.finish_modification();
+                    }
+                    catch (Exception exception)
+                    {
+                        model.reset();
+                    }
+                }
+
+                #region design configurations
+                concrete_design_uls_configuration concreteULSConfiguration = new concrete_design_uls_configuration()
+                {
+                    no = 2,
+                    name = "ScriptedULSConfiguration",
+                    user_defined_name_enabled = true,
+                    user_defined_name_enabledSpecified = true,
+                    assigned_to_all_members = true,
+                    assigned_to_all_membersSpecified = true,
+                    assigned_to_all_surfaces = true,
+                    assigned_to_all_surfacesSpecified = true,
+
+                };
+                concrete_design_sls_configuration concreteSLSConfiguration = new concrete_design_sls_configuration()
+                {
+                    no = 2,
+                    name = "ScriptedSLSConfiguration",
+                    user_defined_name_enabled = true,
+                    user_defined_name_enabledSpecified = true,
+                    assigned_to_all_members = true,
+                    assigned_to_all_membersSpecified = true,
+                    assigned_to_all_surfaces = true,
+                    assigned_to_all_surfacesSpecified = true,
+
+                };
+                try
+                {
+                    model.begin_modification("Set concrete design configurations");
+                    model.set_concrete_design_uls_configuration(concreteULSConfiguration);
+                    model.set_concrete_design_sls_configuration(concreteSLSConfiguration);
+                }
+                catch (Exception exception)
+                {
+                    model.cancel_modification();
+                    throw;
+                }
+                finally
+                {
+                    try
+                    {
+                        model.finish_modification();
+                    }
+                    catch (Exception exception)
+                    {
+                        throw;
+
+                    }
+                }
+                #endregion
+
+                #region Concrete Design input data
+                member_concrete_longitudinal_reinforcement_items_row longitudinalReinforcement = new member_concrete_longitudinal_reinforcement_items_row()
+                {
+                    no = 1,
+                    row = new member_concrete_longitudinal_reinforcement_items()
+                    {
+                        rebar_type = rebar_type.REBAR_TYPE_SYMMETRICAL,
+                        rebar_typeSpecified = true,
+                        material = materialReinforcementBars.no,
+                        materialSpecified = true,
+                        bar_count_symmetrical = 3,
+                        bar_count_symmetricalSpecified = true,
+                        bar_diameter_symmetrical = 0.008,
+                        bar_diameter_symmetricalSpecified = true,
+                        span_position_reference_type = member_concrete_longitudinal_reinforcement_items_span_position_reference_type.LONGITUDINAL_REINFORCEMENT_ITEM_REFERENCE_START,
+                        span_position_reference_typeSpecified = true,
+                        // span_position_definition_format_type = member_concrete_longitudinal_reinforcement_items_span_position_definition_format_type.LONGITUDIANL_REINFORCEMENT_SPAN_DEFINITION_FORMAT_RELATIVE,
+                        // span_position_definition_format_typeSpecified = true,
+                        span_start_relative = 0.0,
+                        span_start_relativeSpecified = true,
+                        span_end_relative = 0.75,
+                        span_end_relativeSpecified = true,
+                        anchorage_start_anchor_type = anchorage_start_anchor_type.ANCHORAGE_TYPE_NONE,
+                        anchorage_end_anchor_type = anchorage_end_anchor_type.ANCHORAGE_TYPE_NONE,
+                    }
+
+                };
+                member_concrete_shear_reinforcement_spans_row shearReinforcement = new member_concrete_shear_reinforcement_spans_row()
+                {
+                    no = 1,
+                    row = new member_concrete_shear_reinforcement_spans()
+                    {
+                        material = materialReinforcementBars.no,
+                        stirrup_type = stirrup_type.STIRRUP_TYPE_FOUR_LEGGED_CLOSED_HOOK_135,
+                        stirrup_distances = 0.3,
+                        stirrup_diameter = 0.08,
+                        span_start_relative = 0.0,
+                        span_start_relativeSpecified = true,
+                        span_end_relative = 0.75,
+                        span_end_relativeSpecified = true,
+                        span_position_reference_type = span_position_reference_type.SHEAR_REINFORCEMENT_SPAN_REFERENCE_START,
+                        span_position_reference_typeSpecified = true,
+                        span_position_definition_format_type = span_position_definition_format_type.SHEAR_REINFORCEMENT_SPAN_DEFINITION_FORMAT_RELATIVE,
+                        span_position_definition_format_typeSpecified = true,
+                    }
+                };
+
+                design_support design_Support = new design_support()
+                {
+                    no = 1,
+                    type = design_support_type.DESIGN_SUPPORT_TYPE_CONCRETE,
+                    typeSpecified = true,
+                    user_defined_name_enabled = true,
+                    user_defined_name_enabledSpecified = true,
+                    name = "Concrete design support scripted",
+                    comment = " scripted support",
+                    activate_in_y = true,
+                    activate_in_ySpecified = true,
+                    activate_in_z = true,
+                    activate_in_zSpecified = true,
+                    consider_in_deflection_design_y = true,
+                    consider_in_deflection_design_ySpecified = true,
+                    consider_in_deflection_design_z = true,
+                    concrete_monolithic_connection_z_enabled = true,
+                    concrete_monolithic_connection_z_enabledSpecified = true,
+                    concrete_ratio_of_moment_redistribution_z = 1,
+                    concrete_ratio_of_moment_redistribution_zSpecified = true,
+                    design_support_orientation_z = design_support_design_support_orientation_z.DESIGN_SUPPORT_ORIENTATION_ZAXIS_POSITIVE,
+                    design_support_orientation_zSpecified = true,
+                    direct_support_z_enabled = true,
+                    direct_support_z_enabledSpecified = true,
+                    inner_support_z_enabled = true,
+                    inner_support_z_enabledSpecified = true,
+                    support_depth_by_section_width_of_member_z_enabled = true,
+                    support_depth_by_section_width_of_member_z_enabledSpecified = true,
+                    support_width_z = 0.3,
+                    support_width_zSpecified = true,
+                    support_depth_by_section_width_of_member_y_enabled = true,
+                    support_depth_by_section_width_of_member_y_enabledSpecified = true,
+                };
+
+                concrete_effective_lengths_factors_row factors = new concrete_effective_lengths_factors_row()
+                {
+                    no = 1,
+                    row = new concrete_effective_lengths_factors()
+                    {
+                        flexural_buckling_y = 1,
+                        flexural_buckling_ySpecified = true,
+                        flexural_buckling_z = 1,
+                        flexural_buckling_zSpecified = true,
+                    }
+                };
+                concrete_effective_lengths_nodal_supports_row celNodalSupportsStart = new concrete_effective_lengths_nodal_supports_row()
+                {
+                    no = 1,
+                    row = new concrete_effective_lengths_nodal_supports()
+                    {
+                        support_type = support_type.SUPPORT_TYPE_FIXED_IN_Z,
+                        support_typeSpecified = true,
+                        support_in_y_type = support_in_y_type.SUPPORT_STATUS_NO,
+                        support_in_y_typeSpecified = true,
+                        support_in_z = true,
+                        support_in_zSpecified = true,
+                        eccentricity_type = eccentricity_type.ECCENTRICITY_TYPE_NONE,
+                        eccentricity_typeSpecified = true,
+                        eccentricity_ez = 0,
+                        eccentricity_ezSpecified = true,
+                        restraint_about_x_type = restraint_about_x_type.SUPPORT_STATUS_NO,
+                        restraint_about_x_typeSpecified = true,
+                        restraint_about_z_type = restraint_about_z_type.SUPPORT_STATUS_NO,
+                        restraint_about_z_typeSpecified = true,
+                        restraint_spring_about_x = 0,
+                        restraint_spring_about_xSpecified = true,
+                        restraint_spring_about_z = 0,
+                        restraint_spring_about_zSpecified = true,
+                        restraint_spring_warping = 0,
+                        restraint_spring_warpingSpecified = true,
+                        restraint_warping_type = restraint_warping_type.SUPPORT_STATUS_NO,
+                        restraint_warping_typeSpecified = true,
+                        support_spring_in_y = 0,
+                        support_spring_in_ySpecified = true,
+                    }
+                };
+                concrete_effective_lengths_nodal_supports_row celNodalSupportsEnd = new concrete_effective_lengths_nodal_supports_row()
+                {
+                    no = 2,
+                    row = new concrete_effective_lengths_nodal_supports()
+                    {
+                        support_type = support_type.SUPPORT_TYPE_FIXED_ALL,
+                        support_typeSpecified = true,
+                        support_in_y_type = support_in_y_type.SUPPORT_STATUS_YES,
+                        support_in_y_typeSpecified = true,
+                        support_in_z = true,
+                        support_in_zSpecified = true,
+                        eccentricity_type = eccentricity_type.ECCENTRICITY_TYPE_NONE,
+                        eccentricity_typeSpecified = true,
+                        eccentricity_ez = 0,
+                        eccentricity_ezSpecified = true,
+                        restraint_about_x_type = restraint_about_x_type.SUPPORT_STATUS_NO,
+                        restraint_about_x_typeSpecified = true,
+                        restraint_about_z_type = restraint_about_z_type.SUPPORT_STATUS_NO,
+                        restraint_about_z_typeSpecified = true,
+                        restraint_spring_about_x = 0,
+                        restraint_spring_about_xSpecified = true,
+                        restraint_spring_about_z = 0,
+                        restraint_spring_about_zSpecified = true,
+                        restraint_spring_warping = 0,
+                        restraint_spring_warpingSpecified = true,
+                        restraint_warping_type = restraint_warping_type.SUPPORT_STATUS_NO,
+                        restraint_warping_typeSpecified = true,
+                        support_spring_in_y = 0,
+                        support_spring_in_ySpecified = true,
+                    }
+                };
+                concrete_effective_lengths concrete_Effective_Lengths = new concrete_effective_lengths()
+                {
+                    no = 2,
+                    flexural_buckling_about_y = true,
+                    flexural_buckling_about_ySpecified = true,
+                    flexural_buckling_about_z = true,
+                    flexural_buckling_about_zSpecified = true,
+                    structure_type_about_axis_y = concrete_effective_lengths_structure_type_about_axis_y.STRUCTURE_TYPE_UNBRACED,
+                    structure_type_about_axis_ySpecified = true,
+                    structure_type_about_axis_z = concrete_effective_lengths_structure_type_about_axis_z.STRUCTURE_TYPE_UNBRACED,
+                    nodal_supports = new concrete_effective_lengths_nodal_supports_row[] { celNodalSupportsStart, celNodalSupportsEnd },
+                    factors = new concrete_effective_lengths_factors_row[] { factors },
+                    different_properties = true,
+                    different_propertiesSpecified = true,
+                    intermediate_nodes = false,
+                    intermediate_nodesSpecified = true,
+
+
+                };
+
+                // concrete_durability concrete_Durability = model.get_concrete_durability(1);
+                concrete_durability concrete_Durability = new concrete_durability()
+                {
+                    no = 1,
+                    corrosion_induced_by_carbonation_enabled = true,
+                    corrosion_induced_by_carbonation_enabledSpecified = true,
+                    corrosion_induced_by_carbonation = concrete_durability_corrosion_induced_by_carbonation.CORROSION_INDUCED_BY_CARBONATION_TYPE_DRY_OR_PERMANENTLY_WET,
+                    corrosion_induced_by_carbonationSpecified = true,
+                    structural_class_type = concrete_durability_structural_class_type.STANDARD,
+                    increase_design_working_life_from_50_to_100_years_enabled = false,
+                    increase_design_working_life_from_50_to_100_years_enabledSpecified = true,
+                    position_of_reinforcement_not_affected_by_construction_process_enabled = false,
+                    position_of_reinforcement_not_affected_by_construction_process_enabledSpecified = true,
+                    special_quality_control_of_production_enabled = false,
+                    special_quality_control_of_production_enabledSpecified = true,
+                    air_entrainment_of_more_than_4_percent_enabled = false,
+                    air_entrainment_of_more_than_4_percent_enabledSpecified = true,
+                    additional_protection_enabled = false,
+                    additional_protection_enabledSpecified = true,
+                    allowance_of_deviation_type = concrete_durability_allowance_of_deviation_type.STANDARD,
+                    allowance_of_deviation_typeSpecified = true,
+
+                };
+
+                //reinforcement_direction Reinforcement_Direction = model.get_reinforcement_direction(1);
+                reinforcement_direction Reinforcement_Direction = new reinforcement_direction()
+                {
+                    no = 1,
+                    reinforcement_direction_type = reinforcement_direction_reinforcement_direction_type.REINFORCEMENT_DIRECTION_TYPE_FIRST_REINFORCEMENT_IN_X,
+                    reinforcement_direction_typeSpecified = true,
+
+                };
+
+                // surface_reinforcement Surface_Reinforcement = model.get_surface_reinforcement(1);
+                surface_reinforcement Surface_Reinforcement = new surface_reinforcement()
+                {
+                    no = 1,
+                    location_type = surface_reinforcement_location_type.LOCATION_TYPE_ON_SURFACE,
+                    location_typeSpecified = true,
+                    material = materialReinforcementBars.no,
+                    materialSpecified = true,
+                    reinforcement_type = surface_reinforcement_reinforcement_type.REINFORCEMENT_TYPE_REBAR,
+                    reinforcement_typeSpecified = true,
+                    rebar_diameter = 0.01,
+                    rebar_diameterSpecified = true,
+                    rebar_spacing = 0.15,
+                    rebar_spacingSpecified = true,
+                    additional_transverse_reinforcement_enabled = false,
+                    additional_transverse_reinforcement_enabledSpecified = true,
+                    additional_offset_to_concrete_cover_top = 0.0,
+                    additional_offset_to_concrete_cover_topSpecified = true,
+                    additional_offset_to_concrete_cover_bottom = 0.0,
+                    additional_offset_to_concrete_cover_bottomSpecified = true,
+                    alignment_bottom_enabled = true,
+                    alignment_bottom_enabledSpecified = true,
+                    alignment_top_enabled = false,
+                    alignment_top_enabledSpecified = true,
+                    reinforcement_direction_type = surface_reinforcement_reinforcement_direction_type.REINFORCEMENT_DIRECTION_TYPE_IN_DESIGN_REINFORCEMENT_DIRECTION,
+                    reinforcement_direction_typeSpecified = true,
+                    design_reinforcement_direction = surface_reinforcement_design_reinforcement_direction.DESIGN_REINFORCEMENT_DIRECTION_A_S_1,
+                    design_reinforcement_directionSpecified = true,
+                };
+
+                surface_reinforcement Surface_ReinforcementMesh = new surface_reinforcement()
+                {
+                    no = 2,
+                    location_type = surface_reinforcement_location_type.LOCATION_TYPE_ON_SURFACE,
+                    location_typeSpecified = true,
+                    material = materialReinforcementBars.no,
+                    materialSpecified = true,
+                    reinforcement_type = surface_reinforcement_reinforcement_type.REINFORCEMENT_TYPE_MESH,
+                    reinforcement_typeSpecified = true,
+                    mesh_name = "Q188A",
+                    mesh_product_range = surface_reinforcement_mesh_product_range.MESHSTANDARD_GERMANY_2008_01_01,
+                    mesh_shape = surface_reinforcement_mesh_shape.MESHSHAPE_Q_MESH,
+                    additional_offset_to_concrete_cover_top = 0.0,
+                    additional_offset_to_concrete_cover_topSpecified = true,
+                    additional_offset_to_concrete_cover_bottom = 0.0,
+                    additional_offset_to_concrete_cover_bottomSpecified = true,
+                    alignment_bottom_enabled = false,
+                    alignment_bottom_enabledSpecified = true,
+                    alignment_top_enabled = true,
+                    alignment_top_enabledSpecified = true,
+                    reinforcement_direction_type = surface_reinforcement_reinforcement_direction_type.REINFORCEMENT_DIRECTION_TYPE_IN_DESIGN_REINFORCEMENT_DIRECTION,
+                    reinforcement_direction_typeSpecified = true,
+                    design_reinforcement_direction = surface_reinforcement_design_reinforcement_direction.DESIGN_REINFORCEMENT_DIRECTION_A_S_1,
+                    design_reinforcement_directionSpecified = true,
+                };
+
+                try
+                {
+                    model.begin_modification("Set concrete design input data");
+                    model.set_design_support(design_Support);
+                    model.set_concrete_effective_lengths(concrete_Effective_Lengths);
+                    model.set_concrete_durability(concrete_Durability);
+                    model.set_reinforcement_direction(Reinforcement_Direction);
+                    model.set_surface_reinforcement(Surface_Reinforcement);
+                    model.set_surface_reinforcement(Surface_ReinforcementMesh);
+
+                }
+                catch (Exception exception)
+                {
+                    model.cancel_modification();
+                    throw;
+                }
+                finally
+                {
+                    try
+                    {
+                        model.finish_modification();
+                    }
+                    catch (Exception exception)
+                    {
+                        throw;
+
+                    }
+                }
+                #endregion
 
                 node n1 = new()
                 {
@@ -363,7 +802,25 @@ namespace RFEMProjectTemplate
                     section_startSpecified = true,
                     section_end = sectionRectangle.no,
                     section_endSpecified = true,
-                    comment = "concrete beam"
+                    comment = "concrete beam",
+                    concrete_durability = concrete_Durability.no,
+                    concrete_durabilitySpecified = true,
+                    concrete_longitudinal_reinforcement_items = new member_concrete_longitudinal_reinforcement_items_row[] { longitudinalReinforcement },
+                    concrete_shear_reinforcement_spans = new member_concrete_shear_reinforcement_spans_row[] { shearReinforcement },
+                    concrete_effective_lengths = concrete_Effective_Lengths.no,
+                    concrete_effective_lengthsSpecified = true,
+                    member_concrete_design_uls_configuration = 1,
+                    member_concrete_design_uls_configurationSpecified = true,
+                    member_concrete_design_sls_configuration = 1,
+                    member_concrete_design_sls_configurationSpecified = true,
+                    deflection_check_direction = member_deflection_check_direction.DEFLECTION_CHECK_DIRECTION_LOCAL_AXIS_Z_AND_Y,
+                    deflection_check_directionSpecified = true,
+                    deflection_check_displacement_reference = member_deflection_check_displacement_reference.DEFLECTION_CHECK_DISPLACEMENT_REFERENCE_DEFORMED_UNDEFORMED_SYSTEM,
+                    deflection_check_displacement_referenceSpecified = true,
+                    design_support_on_member_start = design_Support.no,
+                    design_support_on_member_startSpecified = true,
+                    design_support_on_member_end = design_Support.no,
+                    design_support_on_member_endSpecified = true,
                 };
 
                 nodal_support support = new()
@@ -377,10 +834,6 @@ namespace RFEMProjectTemplate
                 try
                 {
                     model.begin_modification("Geometry");
-                    model.set_material(materialConcrete);
-                    model.set_material(materialUser);
-                    model.set_material(materialUserThermal);
-                    model.set_section(sectionRectangle);
                     model.set_node(n1);
                     model.set_node(n2);
                     model.set_line(line);
@@ -403,6 +856,7 @@ namespace RFEMProjectTemplate
                         model.reset();
                     }
                 }
+
 
 
                 static_analysis_settings analysis = new()
@@ -569,7 +1023,7 @@ namespace RFEMProjectTemplate
                     }
                 }
 
-#if RFEM
+
                 #region generate mesh and get mesh statistics
                 calculation_message[] meshGenerationMessage = model.generate_mesh(true);
                 if (meshGenerationMessage.Length != 0)
@@ -582,15 +1036,35 @@ namespace RFEMProjectTemplate
                 Console.WriteLine("Number of volume elements: " + mesh_Statistics.solid_3D_finite_elements);
 
                 #endregion
-#endif
 
-                calculation_message[] calculationMesages = model.calculate_all(true);
-                if (calculationMesages.Length != 0)
+
+                calculation_result calculationResult = model.calculate_all(true);
+                if (!calculationResult.succeeded || !String.IsNullOrEmpty(calculationResult.messages) || calculationResult.errors_and_warnings.Any())
                 {
-                }
-                else
-                {
-                    Console.WriteLine("Calculation finished successfully");
+                    Console.Write("Calculation is not finished successfully");
+                    if (!String.IsNullOrEmpty(calculationResult.messages))
+                    {
+                        Console.Write(calculationResult.messages);
+                    }
+                    if (calculationResult.errors_and_warnings.Any())
+                    {
+                        foreach (calculation_message message in calculationResult.errors_and_warnings)
+                        {
+                            Console.Write($"{message.message_type.ToString()}  {message.message} {(message.input_field != null ? message.input_field : "")} {(message.@object != null ? message.@object : "")} {(message.current_value != null ? message.current_value : "")} {message.result.ToString()}");
+                        }
+
+                    }
+                    if (!String.IsNullOrEmpty(calculationResult.messages) && !calculationResult.errors_and_warnings.Any())
+                    {
+                        errors_row[] errors = model.get_calculation_errors();
+                        if (errors.Any())
+                        {
+                            foreach (errors_row error in errors)
+                            {
+                                Console.Write($"{error.no} {error.description}  {error.row.analysis_type} {error.row.description} {error.row.error_or_warning_number} {error.row.@object}");
+                            }
+                        }
+                    }
                 }
 
                 #region Results
@@ -622,7 +1096,7 @@ namespace RFEMProjectTemplate
                 foreach (var item in internalForcesMember1)
                 {
                     Console.WriteLine("Row no {0}\t Description {1}", item.no, item.description);
-                    Console.WriteLine("Node {0}\t Location {1}\t Location flags {2}\t Internal force label {3}\t Specification {4}", item.row.node_number != null ? item.row.node_number.value : "NAN", item.row.location, item.row.location_flags, item.row.internal_force_label, item.row.specification);
+                    Console.WriteLine("Node {0}\t Location {1}\t Location flags {2}\t Internal force label {3}\t Specification {4}", item.row.node_number != null ? item.row.node_number?.value : "NAN", item.row.location, item.row.location_flags, item.row.internal_force_label, item.row.specification);
                     Console.WriteLine("N {0}\t Vy {1}\t Vz {2}\t Mx {3}\t My {4}\t Mz {5}\t", item.row.internal_force_n.ToString(), item.row.internal_force_vy.ToString(), item.row.internal_force_vz.ToString(), item.row.internal_force_mt.ToString(), item.row.internal_force_my.ToString(), item.row.internal_force_mz.ToString());
 
                 }
@@ -650,7 +1124,7 @@ namespace RFEMProjectTemplate
                 foreach (var item in nodeReactions)
                 {
                     Console.WriteLine("Row no {0}\t Description {1}", item.no, item.description);
-                    Console.WriteLine("note corresponding loading {0}\t px {1}\t py {2}\t pz {3}\t mx {4}\t my {5}\t mz {6}\t label {7}\t", item.row.node_comment_corresponding_loading.ToString(), item.row.support_force_p_x.value.ToString(), item.row.support_force_p_y.value.ToString(), item.row.support_force_p_z.value.ToString(), item.row.support_moment_m_x.value.ToString(), item.row.support_moment_m_y.ToString(), item.row.support_moment_m_z.ToString(), item.row.support_forces_label);
+                    Console.WriteLine("note corresponding loading {0}\t px {1}\t py {2}\t pz {3}\t mx {4}\t my {5}\t mz {6}\t label {7}\t", item.row.node_comment_corresponding_loading?.ToString(), item.row.support_force_p_x?.value.ToString(), item.row.support_force_p_y?.value.ToString(), item.row.support_force_p_z?.value.ToString(), item.row.support_moment_m_x?.value.ToString(), item.row.support_moment_m_y.ToString(), item.row.support_moment_m_z.ToString(), DecodeHtmlString(item.row.support_forces_label));
 
                 }
                 #endregion
@@ -689,8 +1163,57 @@ namespace RFEMProjectTemplate
                 }
                 #endregion
 
-                application.close_model(0, false);//close model
-                                                  //  application.close_application();
+
+                object_location[] objectLocationSelectedMembers = new object_location[]{
+                     new object_location(){
+                         no = member.no,
+                         parent_no = 0,
+                         parent_noSpecified = true,
+                         type = object_types.E_OBJECT_TYPE_MEMBER
+                     }
+                 };
+                results_for_concrete_design_overview_errors_and_warnings_row[] designOverviewConcrete = model.get_results_for_concrete_design_overview_errors_and_warnings(objectLocationSelectedMembers);
+                foreach (var item in designOverviewConcrete)
+                {
+                    Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}", item.row.addon, item.row.object_type, item.row.objects_no_string, item.row.loading, item.row.design_situation,
+                    item.row.loading, item.row.design_ratio, item.row.description);
+                }
+
+                results_for_concrete_design_overview_not_valid_deactivated_row[] designOverviewConcreteNotActivated = model.get_results_for_concrete_design_overview_not_valid_deactivated(objectLocationSelectedMembers);
+                foreach (var item in designOverviewConcreteNotActivated)
+                {
+                    Console.WriteLine("{0}\t{1}\t{2}\t{3}", item.row.object_type, item.row.objects_string, item.row.error_type, item.row.description);
+                }
+                //by locations
+                results_for_concrete_design_design_ratios_members_by_location_row[] designRationsConcreteMember = model.get_results_for_concrete_design_design_ratios_members_by_location(objectLocationSelectedMembers);
+                foreach (var item in designRationsConcreteMember)
+                { 
+                    Console.WriteLine("Row No: {0}\t Description: {1}", item.no, item.description);
+                    Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t", item.row.member?.value, item.row.location?.value, item.row.design_situation?.value, item.row.loading?.value, item.row.design_ratio?.value, item.row.design_check_type?.value, DecodeHtmlString(item.row.design_check_formula?.value), item.row.design_check_description?.value);
+                }
+
+                
+                results_for_concrete_design_governing_internal_forces_by_member_row[] concreteGovInternalForcesByMember = model.get_results_for_concrete_design_governing_internal_forces_by_member(objectLocationSelectedMembers);
+                foreach (var item in concreteGovInternalForcesByMember)
+                {
+                    Console.WriteLine("Row No: {0}\t Description: {1}", item.no, item.description);
+                    Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t{9}\t{10}\t{11}\t{12}\t{13}\t", item.row.member?.value, item.row.location?.value, item.row.design_situation?.value, item.row.loading?.value, item.row.design_ratio
+                    ?.value, item.row.design_check_type?.value, DecodeHtmlString(item.row.design_check_formula?.value), item.row.design_check_description?.value,
+                    item.row.force_n?.value, item.row.force_vy?.value, item.row.force_vz?.value, item.row.moment_mt?.value, item.row.moment_my?.value, item.row.moment_mz?.value);
+                }
+                results_for_concrete_design_required_reinforcement_area_on_members_by_section_row[] requiredReinforcement = model.get_results_for_concrete_design_required_reinforcement_area_on_members_by_section(objectLocationSelectedMembers);
+                foreach (var item in requiredReinforcement)
+                {
+                    Console.WriteLine("Row No: {0}\t Description: {1}", item.no, item.description);
+                }
+
+                model.close_connection();
+                model_name_and_index[] modelNamesAndIndexes = application.get_model_list_with_indexes();
+                var query = from item in modelNamesAndIndexes where item.name == modelName select item.index;
+                int i = query.FirstOrDefault();
+                application.close_model(i, false);//close model
+                
+                //  application.close_application();
             }
             catch (Exception ex)
             {

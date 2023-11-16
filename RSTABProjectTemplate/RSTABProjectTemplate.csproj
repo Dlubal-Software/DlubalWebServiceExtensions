@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dlubal.RSTABWebServiceLibrary" Version="9.2.67" />
+    <PackageReference Include="Dlubal.RSTABWebServiceLibrary" Version="9.4.7" />
   </ItemGroup>
 
 </Project>
